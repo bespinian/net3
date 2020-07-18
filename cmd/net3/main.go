@@ -44,9 +44,10 @@ func main() {
 
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "namespace",
-						Value: "default",
-						Usage: "the source namespace",
+						Name:    "namespace",
+						Aliases: []string{"n"},
+						Value:   "default",
+						Usage:   "the source namespace",
 					},
 				},
 
@@ -54,11 +55,11 @@ func main() {
 					args := c.Args()
 
 					if args.Len() != 2 {
-						return errors.New("usage: net3 topo SOURCE DESTINATION")
+						return errors.New("usage: net3 topo SOURCE DESTINATION") //nolint:goerr113
 					}
 					err = n3.Topo(c.String("namespace"), args.Get(0), args.Get(1))
 					if err != nil {
-						return fmt.Errorf("error getting topo: %w", err)
+						return fmt.Errorf("error creating topo: %w", err)
 					}
 
 					return nil
