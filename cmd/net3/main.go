@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,42 +14,53 @@ import (
 )
 
 func main() {
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	kubeconfig := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
+	if kubeconfig == "" {
+		home := homeDir()
+		kubeconfig = filepath.Join(home, clientcmd.RecommendedHomeDir, clientcmd.RecommendedFileName)
 	}
-	flag.Parse()
 
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(fmt.Errorf("error building k8s config from flags: %w", err))
 	}
 
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
+	k8s, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(fmt.Errorf("error creating k8s client set: %w", err))
 	}
 
-	n3 := net3.New(clientset)
+	n3 := net3.New(k8s)
 
 	app := &cli.App{
 		Name:  "net3",
 		Usage: "debug k8s workload network traffic",
+
 		Commands: []*cli.Command{
 			{
 				Name:    "topo",
 				Aliases: []string{"t"},
 				Usage:   "display the network topology between a source and a destination",
+
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "namespace",
+						Value: "default",
+						Usage: "the source namespace",
+					},
+				},
+
 				Action: func(c *cli.Context) error {
 					args := c.Args()
-					if args.Len() != 3 {
-						return errors.New("needs more args")
+
+					if args.Len() != 2 {
+						return errors.New("usage: net3 topo SOURCE DESTINATION")
 					}
-					n3.Topo(args.Get(0), args.Get(1))
+					err = n3.Topo(c.String("namespace"), args.Get(0), args.Get(1))
+					if err != nil {
+						return fmt.Errorf("error getting topo: %w", err)
+					}
+
 					return nil
 				},
 			},
@@ -63,8 +74,9 @@ func main() {
 }
 
 func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
+	h := os.Getenv("HOME")
+	if h == "" {
+		h = os.Getenv("USERPROFILE") // windows
 	}
-	return os.Getenv("USERPROFILE") // windows
+	return h
 }
