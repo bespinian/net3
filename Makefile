@@ -4,7 +4,7 @@ all:
 
 .PHONY: install
 install:
-	go install
+	go install ./cmd/net3
 
 .PHONY: lint
 lint:

@@ -2,17 +2,19 @@ package net3
 
 import "k8s.io/client-go/kubernetes"
 
+// Net3 represents a net3 application.
 type Net3 interface {
-	Topo(src, dest string) error
+	Topo(namespace, src, dest string) error
 }
 
 type net3 struct {
-	client *kubernetes.Clientset
+	k8s *kubernetes.Clientset
 }
 
-func New(client *kubernetes.Clientset) Net3 {
+// New creates a net3 application.
+func New(k8s *kubernetes.Clientset) Net3 {
 	c := &net3{
-		client: client,
+		k8s: k8s,
 	}
 	return c
 }
