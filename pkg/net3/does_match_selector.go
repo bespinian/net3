@@ -1,6 +1,6 @@
 package net3
 
-// doesMatchSelector checks if a set of labels match a selector.
+// doesMatchSelector checks if a set of labels matches a selector.
 func doesMatchSelector(selector, labels map[string]string) bool {
 	if len(selector) == 0 {
 		return true
