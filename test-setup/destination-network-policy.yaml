@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress
+  namespace: destination
+spec:
+  podSelector:
+    matchLabels:
+      app: destination
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              purpose: source
+      ports:
+        - protocol: TCP
+          port: 80
