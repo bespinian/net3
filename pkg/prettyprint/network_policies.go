@@ -8,7 +8,7 @@ import (
 )
 
 // NetworkPolicies prints multiple network policies.
-func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy) {
+func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAllowed bool) {
 	for _, p := range policies {
 		lines := []string{
 			fmt.Sprintf("%s Network Policy", policyType),
@@ -36,6 +36,8 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy) {
 		for _, r := range ruleStrings {
 			lines = append(lines, fmt.Sprintf("Rule: %s", r))
 		}
+
+		lines = append(lines, fmt.Sprintf("Allowing: %v", isAllowed))
 
 		fmt.Print(asBox(lines))
 	}
