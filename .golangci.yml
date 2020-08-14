@@ -1,8 +1,9 @@
 linters:
   enable-all: true
   disable:
-    - wsl
     - gomnd
+    - nlreturn
+    - wsl
 
 linters-settings:
   govet:
