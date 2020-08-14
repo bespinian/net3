@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: source
+  namespace: source
+spec:
+  selector:
+    matchLabels:
+      app: source
+  template:
+    metadata:
+      labels:
+        app: source
+    spec:
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:alpine
+          ports:
+            - containerPort: 80

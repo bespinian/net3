@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress
+  namespace: source
+spec:
+  podSelector:
+    matchLabels:
+      app: source
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              purpose: destination
+      ports:
+        - protocol: TCP
+          port: 80
