@@ -62,6 +62,26 @@ func (n *net3) Topo(namespace, src, dest string) error {
 			}
 		}
 	}
+	allowingEgressPols := make([]networkingv1.NetworkPolicy, 0, len(egressPols))
+	denyingEgressPols := make([]networkingv1.NetworkPolicy, 0, len(egressPols))
+	for _, p := range egressPols {
+		doesPolMatch := false
+		for _, r := range p.Spec.Egress {
+			doesRuleMatch, err := n.doesMatchEgressRule(r, destPod, destination.Port)
+			if err != nil {
+				return fmt.Errorf("error checking if egress rule matches: %w", err)
+			}
+			if doesRuleMatch {
+				doesPolMatch = true
+				break
+			}
+		}
+		if doesPolMatch {
+			allowingEgressPols = append(allowingEgressPols, p)
+		} else {
+			denyingEgressPols = append(denyingEgressPols, p)
+		}
+	}
 
 	// Egress connection from service
 	svcTargetPort := 0
@@ -81,8 +101,8 @@ func (n *net3) Topo(namespace, src, dest string) error {
 			}
 		}
 	}
-	allowingPolicies := make([]networkingv1.NetworkPolicy, 0, len(ingressPols))
-	denyingPolicies := make([]networkingv1.NetworkPolicy, 0, len(ingressPols))
+	allowingIngressPols := make([]networkingv1.NetworkPolicy, 0, len(ingressPols))
+	denyingIngressPols := make([]networkingv1.NetworkPolicy, 0, len(ingressPols))
 	for _, p := range ingressPols {
 		doesPolMatch := false
 		for _, r := range p.Spec.Ingress {
@@ -96,29 +116,35 @@ func (n *net3) Topo(namespace, src, dest string) error {
 			}
 		}
 		if doesPolMatch {
-			allowingPolicies = append(allowingPolicies, p)
+			allowingIngressPols = append(allowingIngressPols, p)
 		} else {
-			denyingPolicies = append(denyingPolicies, p)
+			denyingIngressPols = append(denyingIngressPols, p)
 		}
 	}
 
 	fmt.Println("")
 	prettyprint.Pod(srcPod)
 	if len(egressPols) > 0 {
-		prettyprint.Connection([]string{destination.FullPort()}, true)
-		prettyprint.NetworkPolicies(networkingv1.PolicyTypeEgress, egressPols, true)
+		if len(allowingEgressPols) > 0 {
+			prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", destination.Port)}, true)
+			prettyprint.NetworkPolicies(networkingv1.PolicyTypeEgress, allowingEgressPols, true)
+		} else {
+			prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", destination.Port)}, false)
+			prettyprint.NetworkPolicies(networkingv1.PolicyTypeEgress, denyingEgressPols, false)
+		}
 	}
 	prettyprint.Connection([]string{destination.FullPort()}, doesSvcPortExist)
 	prettyprint.Service(svc)
-	prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, true)
 	if len(ingressPols) > 0 {
-		if len(allowingPolicies) > 0 {
-			prettyprint.NetworkPolicies(networkingv1.PolicyTypeIngress, allowingPolicies, true)
+		if len(allowingIngressPols) > 0 {
+			prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, true)
+			prettyprint.NetworkPolicies(networkingv1.PolicyTypeIngress, allowingIngressPols, true)
 		} else {
-			prettyprint.NetworkPolicies(networkingv1.PolicyTypeIngress, denyingPolicies, false)
+			prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, false)
+			prettyprint.NetworkPolicies(networkingv1.PolicyTypeIngress, denyingIngressPols, false)
 		}
-		prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, true)
 	}
+	prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, true)
 	prettyprint.Pod(destPod)
 	fmt.Println("")
 
