@@ -11,8 +11,11 @@ import (
 
 // doesMatchIngressRule checks if a destination matches a network
 // policy ingress rule.
-func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, src *v1.Pod, port int32) (bool, error) {
+func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, src *v1.Pod, port int32, namespace string) (bool, error) {
 	doesPortMatch := false
+	if len(rule.Ports) == 0 {
+		doesPortMatch = true
+	}
 	for _, p := range rule.Ports {
 		if p.Port.IntVal == port {
 			doesPortMatch = true
@@ -24,6 +27,7 @@ func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, 
 	}
 
 	for _, from := range rule.From {
+		fmt.Printf("%+v\n", from)
 		if from.PodSelector != nil {
 			if !doesMatchSelector(from.PodSelector.MatchLabels, src.Labels) {
 				continue
@@ -37,6 +41,8 @@ func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, 
 			if !doesMatchSelector(from.NamespaceSelector.MatchLabels, ns.Labels) {
 				continue
 			}
+		} else if src.Namespace != namespace {
+			continue
 		}
 		if from.IPBlock != nil {
 			doesMatch, err := doesMatchIPBlock(*from.IPBlock, src.Status.PodIP)
