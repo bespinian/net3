@@ -12,8 +12,9 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAl
 	for _, p := range policies {
 		lines := []string{
 			fmt.Sprintf("%s Network Policy", policyType),
-			fmt.Sprintf("Name: %s", p.Name),
-			fmt.Sprintf("Namespace: %s", p.Namespace),
+			fmt.Sprintf("Name:       %s", p.Name),
+			fmt.Sprintf("Namespace:  %s", p.Namespace),
+			fmt.Sprintf("Allowing:   %v", isAllowed),
 		}
 
 		var ruleStrings []string
@@ -34,10 +35,8 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAl
 			}
 		}
 		for _, r := range ruleStrings {
-			lines = append(lines, fmt.Sprintf("Rule: %s", r))
+			lines = append(lines, fmt.Sprintf("Rule:       %s", r))
 		}
-
-		lines = append(lines, fmt.Sprintf("Allowing: %v", isAllowed))
 
 		fmt.Print(asBox(lines))
 	}
