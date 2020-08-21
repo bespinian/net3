@@ -85,11 +85,20 @@ func (n *net3) Topo(namespace, src, dest string) error {
 
 	// Egress connection from service
 	doesSvcPortExist := false
-	svcTargetPort := 0
+	var svcTargetPort int32
 	for _, p := range svc.Spec.Ports {
-		if destination.Port == int(p.Port) {
+		if destination.Port == p.Port {
 			doesSvcPortExist = true
-			svcTargetPort = p.TargetPort.IntValue()
+			svcTargetPort = p.TargetPort.IntVal
+			if svcTargetPort == 0 {
+				for _, c := range destPod.Spec.Containers {
+					for _, cp := range c.Ports {
+						if cp.Name == p.TargetPort.String() {
+							svcTargetPort = cp.ContainerPort
+						}
+					}
+				}
+			}
 		}
 	}
 
