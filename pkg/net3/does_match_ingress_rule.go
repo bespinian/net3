@@ -38,11 +38,15 @@ func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, 
 				continue
 			}
 		}
-		// if from.IpBlock != nil {
-		//	if !doesMatchSelector(from.PodSelector.MatchLabels, src.Labels) {
-		//		continue
-		//	}
-		// }
+		if from.IPBlock != nil {
+			doesMatch, err := doesMatchIPBlock(*from.IPBlock, src.Status.PodIP)
+			if err != nil {
+				return false, fmt.Errorf("error checking if IP block matches: %w", err)
+			}
+			if !doesMatch {
+				continue
+			}
+		}
 		return true, nil
 	}
 
