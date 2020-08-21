@@ -11,10 +11,10 @@ import (
 
 // doesMatchEgressRule checks if a destination matches a network
 // policy egress rule.
-func (n *net3) doesMatchEgressRule(rule networkingv1.NetworkPolicyEgressRule, dest *v1.Pod, port int) (bool, error) {
+func (n *net3) doesMatchEgressRule(rule networkingv1.NetworkPolicyEgressRule, dest *v1.Pod, port int32) (bool, error) {
 	doesPortMatch := false
 	for _, p := range rule.Ports {
-		if p.Port.IntValue() == port {
+		if p.Port.IntVal == port {
 			doesPortMatch = true
 			break
 		}

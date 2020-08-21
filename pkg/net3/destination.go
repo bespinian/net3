@@ -13,7 +13,7 @@ type Destination struct {
 	Namespace string
 	Protocol  string
 	Domain    string
-	Port      int
+	Port      int32
 }
 
 // DestinationKind is a type of destination.
@@ -42,7 +42,7 @@ func NewDestination(address, defaultNamespace string) (*Destination, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid port: %w", err)
 		}
-		d.Port = port
+		d.Port = int32(port)
 	}
 
 	domainParts := strings.Split(d.Domain, ".")
