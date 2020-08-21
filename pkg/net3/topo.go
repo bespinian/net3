@@ -67,7 +67,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	for _, p := range egressPols {
 		doesPolMatch := false
 		for _, r := range p.Spec.Egress {
-			doesRuleMatch, err := n.doesMatchEgressRule(r, destPod, destination.Port)
+			doesRuleMatch, err := n.doesMatchEgressRule(r, destPod, destination.Port, p.Namespace)
 			if err != nil {
 				return fmt.Errorf("error checking if egress rule matches: %w", err)
 			}
@@ -111,7 +111,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	for _, p := range ingressPols {
 		doesPolMatch := false
 		for _, r := range p.Spec.Ingress {
-			doesRuleMatch, err := n.doesMatchIngressRule(r, srcPod, svcTargetPort)
+			doesRuleMatch, err := n.doesMatchIngressRule(r, srcPod, svcTargetPort, p.Namespace)
 			if err != nil {
 				return fmt.Errorf("error checking if ingress rule matches: %w", err)
 			}

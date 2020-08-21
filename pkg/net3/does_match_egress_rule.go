@@ -11,8 +11,11 @@ import (
 
 // doesMatchEgressRule checks if a destination matches a network
 // policy egress rule.
-func (n *net3) doesMatchEgressRule(rule networkingv1.NetworkPolicyEgressRule, dest *v1.Pod, port int32) (bool, error) {
+func (n *net3) doesMatchEgressRule(rule networkingv1.NetworkPolicyEgressRule, dest *v1.Pod, port int32, namespace string) (bool, error) {
 	doesPortMatch := false
+	if len(rule.Ports) == 0 {
+		doesPortMatch = true
+	}
 	for _, p := range rule.Ports {
 		if p.Port.IntVal == port {
 			doesPortMatch = true
@@ -37,6 +40,8 @@ func (n *net3) doesMatchEgressRule(rule networkingv1.NetworkPolicyEgressRule, de
 			if !doesMatchSelector(from.NamespaceSelector.MatchLabels, ns.Labels) {
 				continue
 			}
+		} else if dest.Namespace != namespace {
+			continue
 		}
 		if from.IPBlock != nil {
 			doesMatch, err := doesMatchIPBlock(*from.IPBlock, dest.Status.PodIP)
