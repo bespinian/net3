@@ -84,13 +84,14 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	}
 
 	// Egress connection from service
+	doesSvcPortExist := false
 	svcTargetPort := 0
 	for _, p := range svc.Spec.Ports {
 		if destination.Port == int(p.Port) {
+			doesSvcPortExist = true
 			svcTargetPort = p.TargetPort.IntValue()
 		}
 	}
-	doesSvcPortExist := svcTargetPort != 0
 
 	// Ingress connection to destination
 	ingressPols := make([]networkingv1.NetworkPolicy, 0, len(destNetPolList.Items))
