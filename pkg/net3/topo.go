@@ -85,19 +85,14 @@ func (n *net3) Topo(namespace, src, dest string) error {
 
 	// Egress connection from service
 	doesSvcPortExist := false
+	isPodPortExposed := false
 	var svcTargetPort int32
 	for _, p := range svc.Spec.Ports {
 		if destination.Port == p.Port {
 			doesSvcPortExist = true
-			svcTargetPort = p.TargetPort.IntVal
-			if svcTargetPort == 0 {
-				for _, c := range destPod.Spec.Containers {
-					for _, cp := range c.Ports {
-						if cp.Name == p.TargetPort.String() {
-							svcTargetPort = cp.ContainerPort
-						}
-					}
-				}
+			svcTargetPort, isPodPortExposed = getExposedPodPort(destPod, p.TargetPort)
+			if !isPodPortExposed && p.TargetPort.IntVal != 0 {
+				svcTargetPort = p.TargetPort.IntVal
 			}
 		}
 	}
@@ -154,7 +149,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 			prettyprint.NetworkPolicies(networkingv1.PolicyTypeIngress, denyingIngressPols, false)
 		}
 	}
-	prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, true)
+	prettyprint.Connection([]string{fmt.Sprintf("%s:%v", "TCP", svcTargetPort)}, isPodPortExposed)
 	prettyprint.Pod(destPod)
 	fmt.Println("")
 
