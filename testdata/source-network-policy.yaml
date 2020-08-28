@@ -16,4 +16,16 @@ spec:
               purpose: destination
       ports:
         - protocol: TCP
-          port: 80
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              networking/namespace: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

@@ -17,40 +17,46 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAl
 			fmt.Sprintf("Allowing:   %v", isAllowed),
 		}
 
-		var ruleStrings []string
 		if policyType == v1.PolicyTypeIngress {
 			for _, r := range p.Spec.Ingress {
-				portStrings := make([]string, 0, len(r.Ports))
-				for _, port := range r.Ports {
-					portStrings = append(portStrings, fmtPort(port))
-				}
-				if len(portStrings) == 0 {
-					portStrings = append(portStrings, "all traffic")
-				}
-				fromStrings := make([]string, 0, len(r.From))
-				for _, from := range r.From {
-					fromStrings = append(fromStrings, fmtPeer(from))
-				}
-				ruleStrings = append(ruleStrings, fmt.Sprintf("Allow %s from %s", strings.Join(portStrings, ", "), strings.Join(fromStrings, ", ")))
+				lines = append(lines, fmt.Sprintf("Rule:       %s", fmtIngressRule(r)))
 			}
-		}
-		for _, r := range ruleStrings {
-			lines = append(lines, fmt.Sprintf("Rule:       %s", r))
 		}
 
 		fmt.Print(asBox(lines))
 	}
 }
 
+func fmtIngressRule(rule v1.NetworkPolicyIngressRule) string {
+	str := "Allow "
+
+	portStrings := make([]string, 0, len(rule.Ports))
+	for _, p := range rule.Ports {
+		portStrings = append(portStrings, fmtPort(p))
+	}
+	if len(portStrings) == 0 {
+		portStrings = append(portStrings, "any traffic")
+	}
+	str += strings.Join(portStrings, ",")
+
+	fromStrings := make([]string, 0, len(rule.From))
+	for _, f := range rule.From {
+		fromStrings = append(fromStrings, fmtPeer(f))
+	}
+	str += fmt.Sprintf(" from %s", strings.Join(fromStrings, ","))
+	return str
+
+}
+
 func fmtPort(port v1.NetworkPolicyPort) string {
 	if port.Protocol == nil && port.Port == nil {
-		return "all TCP traffic"
+		return "any TCP traffic"
 	}
 	if port.Port == nil {
-		return fmt.Sprintf("all %s traffic", *port.Protocol)
+		return fmt.Sprintf("any %s traffic", *port.Protocol)
 	}
 	if port.Port.IntVal == 0 && port.Port.StrVal == "" {
-		return fmt.Sprintf("all %s traffic", *port.Protocol)
+		return fmt.Sprintf("any %s traffic", *port.Protocol)
 	}
 	if port.Port.IntVal == 0 {
 		return port.Port.StrVal
@@ -63,6 +69,18 @@ func fmtPort(port v1.NetworkPolicyPort) string {
 }
 
 func fmtPeer(peer v1.NetworkPolicyPeer) string {
+	str := ""
+
+	if peer.PodSelector == nil {
+		str = "any pod"
+	} else {
+		labelStrings := make([]string, 0, len(peer.PodSelector.MatchLabels))
+		for k, v := range peer.PodSelector.MatchLabels {
+			labelStrings = append(labelStrings, fmt.Sprintf("%s=%s", k, v))
+		}
+		str += fmt.Sprintf("pods [%s]", strings.Join(labelStrings, ","))
+	}
+
 	if peer.IPBlock != nil {
 		str := peer.IPBlock.CIDR
 		if len(peer.IPBlock.Except) > 0 {
@@ -71,6 +89,5 @@ func fmtPeer(peer v1.NetworkPolicyPeer) string {
 		return str
 	}
 
-	str := "all pods"
 	return str
 }
