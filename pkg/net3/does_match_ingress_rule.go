@@ -27,7 +27,6 @@ func (n *net3) doesMatchIngressRule(rule networkingv1.NetworkPolicyIngressRule, 
 	}
 
 	for _, from := range rule.From {
-		fmt.Printf("%+v\n", from)
 		if from.PodSelector != nil {
 			if !doesMatchSelector(from.PodSelector.MatchLabels, src.Labels) {
 				continue

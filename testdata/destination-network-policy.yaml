@@ -15,7 +15,6 @@ spec:
           podSelector:
             matchLabels:
               app: source
-              bla: blub
       ports:
         - protocol: TCP
           port: 8080
