@@ -12,6 +12,10 @@ spec:
         - namespaceSelector:
             matchLabels:
               purpose: source
+          podSelector:
+            matchLabels:
+              app: source
+              bla: blub
       ports:
         - protocol: TCP
-          port: 80
+          port: 8080
