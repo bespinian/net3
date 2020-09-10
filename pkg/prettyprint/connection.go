@@ -5,12 +5,14 @@ import (
 	"strings"
 )
 
+const arrowLine = "      │\n"
+
 // Connection prints a connection as a downwards arrow.
 func Connection(ports []string, isOpen bool) {
-	lines := "      │\n"
-	lines += "      │\n"
+	lines := arrowLine
+	lines += arrowLine
 	lines += fmt.Sprintf("      │ %s\n", strings.Join(ports, ", "))
-	lines += "      │\n"
+	lines += arrowLine
 	lines += "      V"
 
 	if isOpen {

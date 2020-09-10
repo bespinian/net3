@@ -43,9 +43,9 @@ func (n *net3) Topo(namespace, src, dest string) error {
 		return fmt.Errorf("error listing destination pods in namespace %q: %w", destination.Namespace, err)
 	}
 	var destPod *corev1.Pod
-	for _, p := range destPods.Items {
+	for i, p := range destPods.Items {
 		if doesMatchSelector(svc.Spec.Selector, p.Labels) {
-			destPod = &p
+			destPod = &destPods.Items[i]
 			break
 		}
 	}

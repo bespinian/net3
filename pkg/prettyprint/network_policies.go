@@ -52,7 +52,6 @@ func fmtIngressRule(rule v1.NetworkPolicyIngressRule, namespace string) string {
 	str += fmt.Sprintf(" from %s", strings.Join(fromStrings, " or from "))
 
 	return str
-
 }
 
 func fmtEgressRule(rule v1.NetworkPolicyEgressRule, namespace string) string {
@@ -74,7 +73,6 @@ func fmtEgressRule(rule v1.NetworkPolicyEgressRule, namespace string) string {
 	str += fmt.Sprintf(" to %s", strings.Join(toStrings, " or to "))
 
 	return str
-
 }
 
 func fmtPort(port v1.NetworkPolicyPort) string {
@@ -121,7 +119,7 @@ func fmtPeer(peer v1.NetworkPolicyPeer, namespace string) string {
 	}
 
 	if peer.IPBlock != nil {
-		str := fmt.Sprintf(" in %s", peer.IPBlock.CIDR)
+		str += fmt.Sprintf(" in %s", peer.IPBlock.CIDR)
 		if len(peer.IPBlock.Except) > 0 {
 			str += fmt.Sprintf(" except %s", strings.Join(peer.IPBlock.Except, ","))
 		}
