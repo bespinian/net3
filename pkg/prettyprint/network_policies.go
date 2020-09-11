@@ -105,17 +105,17 @@ func fmtPeer(peer v1.NetworkPolicyPeer, namespace string) string {
 		for k, v := range peer.PodSelector.MatchLabels {
 			labelStrings = append(labelStrings, fmt.Sprintf("%s=%s", k, v))
 		}
-		str += fmt.Sprintf("pods [%s] in ", strings.Join(labelStrings, ","))
+		str += fmt.Sprintf("pods [%s]", strings.Join(labelStrings, ","))
 	}
 
 	if peer.NamespaceSelector == nil {
-		str = fmt.Sprintf("namespace %q", namespace)
+		str = fmt.Sprintf(" in namespace %q", namespace)
 	} else {
 		labelStrings := make([]string, 0, len(peer.NamespaceSelector.MatchLabels))
 		for k, v := range peer.NamespaceSelector.MatchLabels {
 			labelStrings = append(labelStrings, fmt.Sprintf("%s=%s", k, v))
 		}
-		str += fmt.Sprintf("namespaces [%s]", strings.Join(labelStrings, ","))
+		str += fmt.Sprintf(" in namespaces [%s]", strings.Join(labelStrings, ","))
 	}
 
 	if peer.IPBlock != nil {
