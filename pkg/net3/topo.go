@@ -28,7 +28,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 		return fmt.Errorf("error parsing destination: %w", err)
 	}
 	if destination.Kind != DestinationKindService {
-		return fmt.Errorf("destination kind %s currently not supported", destination.Kind)
+		return fmt.Errorf("error using destination kind %q: %w", destination.Kind, ErrUnsupported)
 	}
 	svc, err := n.k8s.CoreV1().Services(destination.Namespace).Get(context.Background(), destination.Name, metav1.GetOptions{})
 	if err != nil {
@@ -50,7 +50,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 		}
 	}
 	if destPod == nil {
-		return fmt.Errorf("no matching pod found for service %q in namespace %q", svc.Name, svc.Namespace)
+		return fmt.Errorf("error getting pod for service %q in namespace %q: %w", svc.Name, svc.Namespace, ErrNotFound)
 	}
 
 	// Egress connection from source

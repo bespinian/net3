@@ -13,6 +13,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+const topoArgsCount = 2
+
 func main() {
 	kubeconfig := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
 	if kubeconfig == "" {
@@ -54,7 +56,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					args := c.Args()
 
-					if args.Len() != 2 {
+					if args.Len() != topoArgsCount {
 						return errors.New("usage: net3 topo SOURCE DESTINATION") //nolint:goerr113
 					}
 					err = n3.Topo(c.String("namespace"), args.Get(0), args.Get(1))
