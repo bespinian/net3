@@ -1,7 +1,10 @@
 linters:
   enable-all: true
   disable:
-    - gomnd
+    - dupl
+    - funlen
+    - gocognit
+    - gocyclo
     - lll
     - nlreturn
     - wsl

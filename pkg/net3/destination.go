@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const defaultHTTPPort = 80
+
 // Destination is a destination for a request.
 type Destination struct {
 	Kind      DestinationKind
@@ -31,14 +33,14 @@ func NewDestination(address, defaultNamespace string) (*Destination, error) {
 		Namespace: defaultNamespace,
 		Protocol:  "TCP",
 		Domain:    address,
-		Port:      80,
+		Port:      defaultHTTPPort,
 	}
 
 	addressParts := strings.Split(address, ":")
 	if len(addressParts) > 1 {
 		d.Name = addressParts[0]
 		d.Domain = addressParts[0]
-		port, err := strconv.Atoi(addressParts[len(addressParts)-1])
+		port, err := strconv.Atoi(addressParts[len(addressParts)-1]) //nolint:gosec
 		if err != nil {
 			return nil, fmt.Errorf("invalid port: %w", err)
 		}
