@@ -98,8 +98,8 @@ func fmtPort(port v1.NetworkPolicyPort) string {
 func fmtPeer(peer v1.NetworkPolicyPeer, namespace string) string {
 	str := ""
 
-	if peer.PodSelector == nil {
-		str = "any pod"
+	if peer.PodSelector == nil || len(peer.PodSelector.MatchLabels) == 0 {
+		str += "any pod"
 	} else {
 		labelStrings := make([]string, 0, len(peer.PodSelector.MatchLabels))
 		for k, v := range peer.PodSelector.MatchLabels {
@@ -109,7 +109,7 @@ func fmtPeer(peer v1.NetworkPolicyPeer, namespace string) string {
 	}
 
 	if peer.NamespaceSelector == nil {
-		str = fmt.Sprintf(" in namespace %q", namespace)
+		str += fmt.Sprintf(" in namespace %q", namespace)
 	} else {
 		labelStrings := make([]string, 0, len(peer.NamespaceSelector.MatchLabels))
 		for k, v := range peer.NamespaceSelector.MatchLabels {
