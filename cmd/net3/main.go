@@ -14,6 +14,7 @@ import (
 )
 
 const topoArgsCount = 2
+const logArgsCount = 1
 
 func main() {
 	kubeconfig := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
@@ -62,6 +63,34 @@ func main() {
 					err = n3.Topo(c.String("namespace"), args.Get(0), args.Get(1))
 					if err != nil {
 						return fmt.Errorf("error creating topo: %w", err)
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:    "log",
+				Aliases: []string{"l"},
+				Usage:   "add a request logging proxy to the pods of a service",
+
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "namespace",
+						Aliases: []string{"n"},
+						Value:   "default",
+						Usage:   "the target namespace",
+					},
+				},
+
+				Action: func(c *cli.Context) error {
+					args := c.Args()
+
+					if args.Len() != logArgsCount {
+						return errors.New("usage: net3 log DESTINATION") //nolint:goerr113
+					}
+					err = n3.Log(c.String("namespace"), args.Get(0))
+					if err != nil {
+						return fmt.Errorf("error executing log command: %w", err)
 					}
 
 					return nil
