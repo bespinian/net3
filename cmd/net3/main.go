@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/bespinian/net3/pkg/net3"
 	"github.com/urfave/cli/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 const topoArgsCount = 2
-const logArgsCount = 1
+const logArgsCount = 2
 
 func main() {
 	kubeconfig := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
@@ -71,7 +72,7 @@ func main() {
 			{
 				Name:    "log",
 				Aliases: []string{"l"},
-				Usage:   "add a request logging proxy to the pods of a service",
+				Usage:   "add a request logging proxy to the pods of a service on a given port",
 
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -86,9 +87,14 @@ func main() {
 					args := c.Args()
 
 					if args.Len() != logArgsCount {
-						return errors.New("usage: net3 log DESTINATION") //nolint:goerr113
+						return errors.New("usage: net3 log DESTINATION PORT") //nolint:goerr113
 					}
-					err = n3.Log(c.String("namespace"), args.Get(0))
+					portInt, err := (strconv.Atoi(args.Get(1)))
+					if err != nil {
+						return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
+					}
+					port := int32(portInt)
+					err = n3.Log(c.String("namespace"), args.Get(0), port)
 					if err != nil {
 						return fmt.Errorf("error executing log command: %w", err)
 					}
