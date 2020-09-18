@@ -9,7 +9,7 @@ import (
 )
 
 func (n *net3) getServicePods(svcName, namespace string) ([]corev1.Pod, error) {
-	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), namespace, metav1.GetOptions{})
+	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), svcName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting destination service in namespace %q: %w", namespace, err)
 	}
