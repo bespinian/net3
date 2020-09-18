@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/bespinian/net3/pkg/prettyprint"
-	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -38,21 +37,15 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("error listing destination network policies in namespace %q: %w", destination.Namespace, err)
 	}
-	destPods, err := n.k8s.CoreV1().Pods(destination.Namespace).List(context.Background(), metav1.ListOptions{})
+	destPods, err := n.getServicePods(svc.Name, svc.Namespace)
 	if err != nil {
-		return fmt.Errorf("error listing destination pods in namespace %q: %w", destination.Namespace, err)
+		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", svc.Name, svc.Namespace, err)
 	}
-	var destPod *corev1.Pod
-	for i, p := range destPods.Items {
-		if doesMatchSelector(svc.Spec.Selector, p.Labels) {
-			destPod = &destPods.Items[i]
-			break
-		}
-	}
-	if destPod == nil {
+	if len(destPods) <= 0 {
 		return fmt.Errorf("error getting pod for service %q in namespace %q: %w", svc.Name, svc.Namespace, ErrNotFound)
 	}
 
+	destPod := &destPods[0]
 	// Egress connection from service
 	doesSvcPortExist := false
 	isPodPortExposed := false
