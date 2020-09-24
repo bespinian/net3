@@ -41,7 +41,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", svc.Name, svc.Namespace, err)
 	}
-	if len(destPods) <= 0 {
+	if len(destPods) == 0 {
 		return fmt.Errorf("error getting pod for service %q in namespace %q: %w", svc.Name, svc.Namespace, ErrNotFound)
 	}
 
