@@ -1,16 +1,18 @@
 package net3
 
-import "fmt"
+import (
+	"fmt"
+)
 
-// Log redeploys pods with a proxy container which logs all requests to the specified port
+// Log redeploys pods with a proxy container which logs all requests to the specified port.
 func (n *net3) Log(namespace, dest string, port int32) error {
 	svcPods, err := n.getServicePods(namespace, dest)
-	if err != err {
+	if err != nil {
 		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", dest, namespace, err)
 	}
 
-	if len(svcPods) <= 0 {
-		return fmt.Errorf("service %q has no pods", dest)
+	if len(svcPods) == 0 {
+		return fmt.Errorf("service %q has no pods: %w", dest, ErrNotFound)
 	}
 
 	samplePod := svcPods[0]

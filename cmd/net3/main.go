@@ -14,8 +14,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const topoArgsCount = 2
-const logArgsCount = 2
+const (
+	topoArgsCount = 2
+	logArgsCount  = 2
+)
 
 func main() {
 	kubeconfig := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
@@ -89,8 +91,8 @@ func main() {
 					if args.Len() != logArgsCount {
 						return errors.New("usage: net3 log DESTINATION PORT") //nolint:goerr113
 					}
-					portInt, err := (strconv.Atoi(args.Get(1)))
-					if err != nil {
+					portInt, convErr := (strconv.Atoi(args.Get(1)))
+					if convErr != nil {
 						return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
 					}
 					port := int32(portInt)
