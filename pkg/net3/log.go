@@ -9,6 +9,25 @@ import (
 
 // Log redeploys pods with a proxy container which logs all requests to the specified port.
 func (n *net3) Log(namespace, dest string, port int32) error {
+	// retrieve destination service
+	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), dest, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("service with name %q not found in namespace %q: %w", dest, namespace, ErrNotFound)
+	}
+
+	// look up destination port
+	var destPort int32
+	for _, p := range svc.Spec.Ports {
+		if p.Port == port {
+			destPort = p.TargetPort.IntVal
+			break
+		}
+	}
+
+	if destPort == 0 {
+		return fmt.Errorf("service %q does not expose port %q: %w", dest, port, ErrNotFound)
+	}
+
 	svcPods, err := n.getServicePods(namespace, dest)
 	if err != nil {
 		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", dest, namespace, err)
