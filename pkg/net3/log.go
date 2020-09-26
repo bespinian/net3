@@ -15,18 +15,23 @@ func (n *net3) Log(namespace, dest string, port int32) error {
 		return fmt.Errorf("service with name %q not found in namespace %q: %w", dest, namespace, ErrNotFound)
 	}
 
-	// look up destination port
-	var destPort int32
+	// look up destination port and highest destination port
+	var destPort, maxDestPort int32
 	for _, p := range svc.Spec.Ports {
 		if p.Port == port {
 			destPort = p.TargetPort.IntVal
-			break
+		}
+		if p.TargetPort.IntVal > maxDestPort {
+			maxDestPort = p.TargetPort.IntVal
 		}
 	}
 
 	if destPort == 0 {
 		return fmt.Errorf("service %q does not expose port %q: %w", dest, port, ErrNotFound)
 	}
+
+	// choose a port for the proxy higher than any current destination port
+	proxyPort := maxDestPort + 1
 
 	svcPods, err := n.getServicePods(namespace, dest)
 	if err != nil {
@@ -58,18 +63,21 @@ func (n *net3) Log(namespace, dest string, port int32) error {
 					if err != nil {
 						return fmt.Errorf("no Deployment %q matching owner ref found: %w", replicaSetOwnerRef.Name, err)
 					}
+					n.addLogProxy(&deployment.Spec.Template.Spec, proxyPort, destPort)
+					_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
+					if err != nil {
+						return fmt.Errorf("cannot update deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
+					}
+					// update the service to forward to the proxy port
+					n.updateServicePort(&svc.Spec, port, proxyPort)
+					_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
+					if err != nil {
+						return fmt.Errorf("cannot update service %q in namespace %q with proxy container port: %w", svc.Name, namespace, err)
+					}
 					fmt.Println(deployment.Name)
-				} else {
-					// any other possibilities (don't know any)?
 				}
-			} else {
-				// ReplicaSet has been created manually. Add the proxy container to the pod spec and apply
 			}
-		} else {
-			// any other possibilities (don't know any)?
 		}
-	} else {
-		// pod has been created manually, conclude that all others have too and replace them one by one
 	}
 
 	for _, p := range svcPods {
