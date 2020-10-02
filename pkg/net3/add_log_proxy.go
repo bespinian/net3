@@ -1,6 +1,10 @@
 package net3
 
-import v1 "k8s.io/api/core/v1"
+import (
+	"strconv"
+
+	v1 "k8s.io/api/core/v1"
+)
 
 func (n *net3) addLogProxy(podSpec *v1.PodSpec, port, destPort int32) {
 	proxyContainer := v1.Container{
@@ -12,15 +16,15 @@ func (n *net3) addLogProxy(podSpec *v1.PodSpec, port, destPort int32) {
 		},
 		Env: []v1.EnvVar{
 			{
-				Name:  "SOURCE_PORT",
-				Value: string(port),
+				Name:  "NET3_HTTP_PROXY_PORT",
+				Value: strconv.Itoa(int(port)),
 			},
 			{
-				Name:  "DESTINATION_PORT",
-				Value: string(destPort),
+				Name:  "NET3_HTTP_PROXY_TARGET_PORT",
+				Value: strconv.Itoa(int(destPort)),
 			},
 		},
-		Image: "busybox",
+		Image: "bespinian/net3-http-proxy:0.0.1",
 		Name:  "net3-log-proxy",
 	}
 
