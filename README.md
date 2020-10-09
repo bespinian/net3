@@ -9,7 +9,7 @@ net³ [netkube] is a tool to debug and understand network traffic in Kubernetes.
 Show the network topology of a specific connection
 
 ```shell
-$ net3 topo mypod123 myservice123
+$ net3 topo -n source mypod123 myservice123
 
 ┌─────────────────────────────────────────────────────┐
 │ Pod                                                 │
@@ -56,7 +56,23 @@ $ net3 topo mypod123 myservice123
 
 ```
 
+### Log
+
+Add HTTP request and response logging to an existing service
+
+Run
+
+```shell
+$ net3 log -n destination myservice123 80
+
+```
+
+and in another shell run
+
+```shell
+$ kubectl logs -n destination mypod123 -c net3-http-proxy -f
+```
+
 ## Roadmap
 
-- [ ] Kubernetes support for `topo` command
 - [ ] Istio support for `topo` command
