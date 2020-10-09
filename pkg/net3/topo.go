@@ -37,7 +37,7 @@ func (n *net3) Topo(namespace, src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("error listing destination network policies in namespace %q: %w", destination.Namespace, err)
 	}
-	destPods, err := n.getServicePods(svc.Name, svc.Namespace)
+	destPods, err := n.getServicePods(context.Background(), svc.Name, svc.Namespace)
 	if err != nil {
 		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", svc.Name, svc.Namespace, err)
 	}

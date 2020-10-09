@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (n *net3) updateServicePort(service *v1.ServiceSpec, port, newTargetPort int32) {
+func svcSpecWithProxy(service v1.ServiceSpec, port, newTargetPort int32) v1.ServiceSpec {
 	updatedPorts := make([]v1.ServicePort, 0)
 	for _, p := range service.Ports {
 		if p.Port == port {
@@ -13,5 +13,8 @@ func (n *net3) updateServicePort(service *v1.ServiceSpec, port, newTargetPort in
 		}
 		updatedPorts = append(updatedPorts, p)
 	}
+
 	service.Ports = updatedPorts
+
+	return service
 }
