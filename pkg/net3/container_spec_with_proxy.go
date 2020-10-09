@@ -8,8 +8,9 @@ import (
 
 func containerSpecWithProxy(podSpec v1.PodSpec, proxyPort, targetPort int32) v1.PodSpec {
 	proxyContainer := v1.Container{
-		Name:  "net3-log-proxy",
-		Image: "bespinian/net3-http-proxy:0.0.1",
+		Name:            "net3-log-proxy",
+		Image:           "bespinian/net3-http-proxy:0.0.1",
+		ImagePullPolicy: v1.PullAlways,
 		Ports: []v1.ContainerPort{
 			{ContainerPort: proxyPort},
 		},
