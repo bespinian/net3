@@ -16,7 +16,7 @@ import (
 
 const (
 	topoArgsCount = 2
-	logArgsCount  = 2
+	logsArgsCount = 2
 )
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 				},
 			},
 			{
-				Name:    "log",
+				Name:    "logs",
 				Aliases: []string{"l"},
 				Usage:   "add a request logging proxy to the pods of a service on a given port",
 
@@ -88,17 +88,17 @@ func main() {
 				Action: func(c *cli.Context) error {
 					args := c.Args()
 
-					if args.Len() != logArgsCount {
-						return errors.New("usage: net3 log DESTINATION PORT") //nolint:goerr113
+					if args.Len() != logsArgsCount {
+						return errors.New("usage: net3 logs DESTINATION PORT") //nolint:goerr113
 					}
 					portInt, convErr := (strconv.Atoi(args.Get(1)))
 					if convErr != nil {
 						return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
 					}
 					port := int32(portInt)
-					err = n3.Log(c.String("namespace"), args.Get(0), port)
+					err = n3.Logs(c.String("namespace"), args.Get(0), port)
 					if err != nil {
-						return fmt.Errorf("error executing log command: %w", err)
+						return fmt.Errorf("error executing logs command: %w", err)
 					}
 
 					return nil
