@@ -8,11 +8,11 @@ import (
 )
 
 // Log redeploys pods with a proxy container which logs all requests to the specified port.
-func (n *net3) Log(namespace, dest string, port int32) error {
+func (n *net3) Log(namespace, serviceName string, port int32) error {
 	// retrieve destination service
-	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), dest, metav1.GetOptions{})
+	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {
-		return fmt.Errorf("service with name %q not found in namespace %q: %w", dest, namespace, ErrNotFound)
+		return fmt.Errorf("service with name %q not found in namespace %q: %w", serviceName, namespace, ErrNotFound)
 	}
 
 	// look up destination port and highest destination port
@@ -27,61 +27,61 @@ func (n *net3) Log(namespace, dest string, port int32) error {
 	}
 
 	if destPort == 0 {
-		return fmt.Errorf("service %q does not expose port %q: %w", dest, port, ErrNotFound)
+		return fmt.Errorf("service %q does not expose port %v: %w", serviceName, port, ErrNotFound)
 	}
 
 	// choose a port for the proxy higher than any current destination port
 	proxyPort := maxDestPort + 1
 
-	svcPods, err := n.getServicePods(namespace, dest)
+	svcPods, err := n.getServicePods(context.Background(), namespace, serviceName)
 	if err != nil {
-		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", dest, namespace, err)
+		return fmt.Errorf("error getting pods for service %q in namespace %q: %w", serviceName, namespace, err)
 	}
 
 	if len(svcPods) == 0 {
-		return fmt.Errorf("service %q has no pods: %w", dest, ErrNotFound)
+		return fmt.Errorf("service %q has no pods: %w", serviceName, ErrNotFound)
 	}
 
 	samplePod := svcPods[0]
+	podOwnerRefs := samplePod.GetOwnerReferences()
 
 	// find owner of pods
-	if len(samplePod.GetOwnerReferences()) > 0 {
+	if len(podOwnerRefs) > 0 {
 		// pod is owned by something
-		podOwnerRef := samplePod.GetOwnerReferences()[0]
+		podOwnerRef := podOwnerRefs[0]
 		if podOwnerRef.Kind == "ReplicaSet" {
 			// look up the ReplicaSet and check whether it is owned by a Deployment
 			replicaSet, err := n.k8s.AppsV1().ReplicaSets(namespace).Get(context.Background(), podOwnerRef.Name, metav1.GetOptions{})
 			if err != nil {
-				return fmt.Errorf("no ReplicaSet %q matching owner ref found: %w", podOwnerRef.Name, err)
+				return fmt.Errorf("error getting replica set %q: %w", podOwnerRef.Name, err)
 			}
-			if len(replicaSet.GetOwnerReferences()) > 0 {
+
+			replicaSetOwnerRefs := replicaSet.GetOwnerReferences()
+			if len(replicaSetOwnerRefs) > 0 {
 				// ReplicaSet is owned by something
-				replicaSetOwnerRef := replicaSet.GetOwnerReferences()[0]
+				replicaSetOwnerRef := replicaSetOwnerRefs[0]
 				if replicaSetOwnerRef.Kind == "Deployment" {
 					// Retrieve the Deployment, add the proxy container to the pod spec and apply
 					deployment, err := n.k8s.AppsV1().Deployments(namespace).Get(context.Background(), replicaSetOwnerRef.Name, metav1.GetOptions{})
 					if err != nil {
-						return fmt.Errorf("no Deployment %q matching owner ref found: %w", replicaSetOwnerRef.Name, err)
+						return fmt.Errorf("error getting deployment %q: %w", replicaSetOwnerRef.Name, err)
 					}
-					n.addLogProxy(&deployment.Spec.Template.Spec, proxyPort, destPort)
+
+					deployment.Spec.Template.Spec = containerSpecWithProxy(deployment.Spec.Template.Spec, proxyPort, destPort)
 					_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
 					if err != nil {
-						return fmt.Errorf("cannot update deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
+						return fmt.Errorf("error updating deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
 					}
+
 					// update the service to forward to the proxy port
-					n.updateServicePort(&svc.Spec, port, proxyPort)
+					svc.Spec = svcSpecWithProxy(svc.Spec, port, proxyPort)
 					_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
 					if err != nil {
-						return fmt.Errorf("cannot update service %q in namespace %q with proxy container port: %w", svc.Name, namespace, err)
+						return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
 					}
-					fmt.Println(deployment.Name)
 				}
 			}
 		}
-	}
-
-	for _, p := range svcPods {
-		fmt.Println(p.Name)
 	}
 
 	return nil
