@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	topoArgsCount = 2
-	logsArgsCount = 2
+	topoArgsCount     = 2
+	proxyAddArgsCount = 2
 )
 
 func main() {
@@ -72,36 +72,40 @@ func main() {
 				},
 			},
 			{
-				Name:    "logs",
-				Aliases: []string{"l"},
-				Usage:   "add a request logging proxy to the pods of a service on a given port",
+				Name:    "proxy",
+				Aliases: []string{"p"},
+				Usage:   "manage logging proxies",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "add",
+						Usage: "add a logging proxy to the pods of an existing service",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "namespace",
+								Aliases: []string{"n"},
+								Value:   "default",
+								Usage:   "the target namespace",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							args := c.Args()
 
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:    "namespace",
-						Aliases: []string{"n"},
-						Value:   "default",
-						Usage:   "the target namespace",
+							if args.Len() != proxyAddArgsCount {
+								return errors.New("usage: net3 proxy add DESTINATION PORT") //nolint:goerr113
+							}
+							portInt, convErr := (strconv.Atoi(args.Get(1)))
+							if convErr != nil {
+								return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
+							}
+							port := int32(portInt)
+							err = n3.AddProxy(c.String("namespace"), args.Get(0), port)
+							if err != nil {
+								return fmt.Errorf("error adding logging proxy: %w", err)
+							}
+
+							return nil
+						},
 					},
-				},
-
-				Action: func(c *cli.Context) error {
-					args := c.Args()
-
-					if args.Len() != logsArgsCount {
-						return errors.New("usage: net3 logs DESTINATION PORT") //nolint:goerr113
-					}
-					portInt, convErr := (strconv.Atoi(args.Get(1)))
-					if convErr != nil {
-						return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
-					}
-					port := int32(portInt)
-					err = n3.Logs(c.String("namespace"), args.Get(0), port)
-					if err != nil {
-						return fmt.Errorf("error executing logs command: %w", err)
-					}
-
-					return nil
 				},
 			},
 		},
