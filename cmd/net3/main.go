@@ -77,8 +77,9 @@ func main() {
 				Usage:   "manage logging proxies",
 				Subcommands: []*cli.Command{
 					{
-						Name:  "add",
-						Usage: "add a logging proxy to the pods of an existing service",
+						Name:    "add",
+						Aliases: []string{"a"},
+						Usage:   "add a logging proxy to the pods of an existing service",
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:    "namespace",
@@ -100,7 +101,38 @@ func main() {
 							port := int32(portInt)
 							err = n3.AddProxy(c.String("namespace"), args.Get(0), port)
 							if err != nil {
-								return fmt.Errorf("error adding logging proxy: %w", err)
+								return fmt.Errorf("error adding proxy: %w", err)
+							}
+
+							return nil
+						},
+					},
+					{
+						Name:    "remove",
+						Aliases: []string{"r"},
+						Usage:   "remove a logging proxy from the pods of an existing service",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "namespace",
+								Aliases: []string{"n"},
+								Value:   "default",
+								Usage:   "the target namespace",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							args := c.Args()
+
+							if args.Len() != proxyAddArgsCount {
+								return errors.New("usage: net3 proxy remove DESTINATION PORT") //nolint:goerr113
+							}
+							portInt, convErr := (strconv.Atoi(args.Get(1)))
+							if convErr != nil {
+								return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
+							}
+							port := int32(portInt)
+							err = n3.RemoveProxy(c.String("namespace"), args.Get(0), port)
+							if err != nil {
+								return fmt.Errorf("error removing proxy: %w", err)
 							}
 
 							return nil
