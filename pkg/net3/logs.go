@@ -91,5 +91,7 @@ func (n *net3) Logs(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
 	}
 
+	fmt.Printf("Added log proxy to service %q", svc.Name)
+
 	return nil
 }
