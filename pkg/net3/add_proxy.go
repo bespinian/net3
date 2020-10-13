@@ -8,7 +8,7 @@ import (
 )
 
 // Logs redeploys pods with a proxy container which logs all requests to the specified port.
-func (n *net3) Logs(namespace, serviceName string, port int32) error {
+func (n *net3) AddProxy(namespace, serviceName string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -91,7 +91,7 @@ func (n *net3) Logs(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
 	}
 
-	fmt.Printf("Added log proxy to service %q", svc.Name)
+	fmt.Printf("Added log proxy to pods of service %q\n", svc.Name)
 
 	return nil
 }
