@@ -9,11 +9,11 @@ type Net3 interface {
 }
 
 type net3 struct {
-	k8s *kubernetes.Clientset
+	k8s kubernetes.Interface
 }
 
 // New creates a net3 application.
-func New(k8s *kubernetes.Clientset) Net3 {
+func New(k8s kubernetes.Interface) Net3 {
 	c := &net3{
 		k8s: k8s,
 	}
