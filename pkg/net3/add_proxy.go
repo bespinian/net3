@@ -3,6 +3,7 @@ package net3
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -91,7 +92,14 @@ func (n *net3) AddProxy(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
 	}
 
-	fmt.Printf("Added log proxy to pods of service %q\n", svc.Name)
+	labelStrings := make([]string, 0, len(svc.Spec.Selector))
+	for k, v := range svc.Spec.Selector {
+		labelStrings = append(labelStrings, fmt.Sprintf("%s=%s", k, v))
+	}
+	logCommand := fmt.Sprintf("kubectl -n %s logs -l %s -c %s -f", namespace, strings.Join(labelStrings, ","), proxyContainerName)
+
+	fmt.Printf("Added log proxy to pods of service %q as container %q\n", svc.Name, proxyContainerName)
+	fmt.Printf("Get the request and response logs with %q\n", logCommand)
 
 	return nil
 }
