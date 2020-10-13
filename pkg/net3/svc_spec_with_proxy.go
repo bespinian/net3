@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func svcSpecWithProxy(service v1.ServiceSpec, port, newTargetPort int32) v1.ServiceSpec {
+func svcSpecWithTargetPort(service v1.ServiceSpec, port, newTargetPort int32) v1.ServiceSpec {
 	updatedPorts := make([]v1.ServicePort, 0)
 	for _, p := range service.Ports {
 		if p.Port == port {
