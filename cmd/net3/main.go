@@ -87,6 +87,18 @@ func main() {
 								Value:   "default",
 								Usage:   "the target namespace",
 							},
+							&cli.StringFlag{
+								Name:    "container-name",
+								Aliases: []string{"c"},
+								Value:   "net3-proxy",
+								Usage:   "name of proxy container",
+							},
+							&cli.StringFlag{
+								Name:    "image",
+								Aliases: []string{"i"},
+								Value:   "bespinian/net3-http-proxy",
+								Usage:   "image for proxy container",
+							},
 						},
 						Action: func(c *cli.Context) error {
 							args := c.Args()
@@ -99,7 +111,7 @@ func main() {
 								return fmt.Errorf("error converting argument %q to a port number: %w", args.Get(1), err)
 							}
 							port := int32(portInt)
-							err = n3.AddProxy(c.String("namespace"), args.Get(0), port)
+							err = n3.AddProxy(c.String("namespace"), args.Get(0), c.String("container-name"), c.String("image"), port)
 							if err != nil {
 								return fmt.Errorf("error adding proxy: %w", err)
 							}

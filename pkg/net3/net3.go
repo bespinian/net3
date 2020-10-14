@@ -5,8 +5,8 @@ import "k8s.io/client-go/kubernetes"
 // Net3 represents a net3 application.
 type Net3 interface {
 	Topo(namespace, src, dest string) error
-	AddProxy(namespace, dest string, port int32) error
-	RemoveProxy(namespace, dest string, port int32) error
+	AddProxy(namespace, serviceName, containerName, image string, port int32) error
+	RemoveProxy(namespace, serviceName string, port int32) error
 }
 
 type net3 struct {

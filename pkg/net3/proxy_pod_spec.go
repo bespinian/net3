@@ -8,15 +8,14 @@ import (
 )
 
 const (
-	proxyContainerName    = "net3-log-proxy"
 	proxyEnvVarPort       = "NET3_HTTP_PROXY_PORT"
 	proxyEnvVarTargetPort = "NET3_HTTP_PROXY_TARGET_PORT"
 )
 
-func podSpecWithProxy(podSpec v1.PodSpec, proxyPort, targetPort int32) v1.PodSpec {
+func podSpecWithProxy(podSpec v1.PodSpec, containerName, image string, proxyPort, targetPort int32) v1.PodSpec {
 	proxyContainer := v1.Container{
-		Name:            proxyContainerName,
-		Image:           "bespinian/net3-http-proxy:0.0.1",
+		Name:            containerName,
+		Image:           image,
 		ImagePullPolicy: v1.PullAlways,
 		Ports: []v1.ContainerPort{
 			{ContainerPort: proxyPort},
@@ -38,12 +37,12 @@ func podSpecWithProxy(podSpec v1.PodSpec, proxyPort, targetPort int32) v1.PodSpe
 	return podSpec
 }
 
-func podSpecWithoutProxy(podSpec v1.PodSpec) (v1.PodSpec, int32, error) {
+func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string, targetPort int32) (v1.PodSpec, int32, error) {
 	var originalPort int32
 	containers := make([]v1.Container, 0)
 
 	for _, c := range podSpec.Containers {
-		if c.Name == proxyContainerName {
+		if c.Name == containerName {
 			for _, e := range c.Env {
 				if e.Name == proxyEnvVarTargetPort {
 					v, err := strconv.Atoi(e.Value)

@@ -9,7 +9,7 @@ import (
 )
 
 // Logs redeploys pods with a proxy container which logs all requests to the specified port.
-func (n *net3) AddProxy(namespace, serviceName string, port int32) error {
+func (n *net3) AddProxy(namespace, serviceName, containerName, image string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -79,14 +79,14 @@ func (n *net3) AddProxy(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error getting deployment %q: %w", replicaSetOwnerRef.Name, err)
 	}
 
-	deployment.Spec.Template.Spec = podSpecWithProxy(deployment.Spec.Template.Spec, proxyPort, destPort)
+	deployment.Spec.Template.Spec = podSpecWithProxy(deployment.Spec.Template.Spec, containerName, image, proxyPort, destPort)
 	_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("error updating deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
 	}
 
 	// update the service to forward to the proxy port
-	svc.Spec = svcSpecWithTargetPort(svc.Spec, port, proxyPort)
+	*svc = svcWithProxy(*svc, containerName, port, proxyPort)
 	_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
@@ -96,9 +96,9 @@ func (n *net3) AddProxy(namespace, serviceName string, port int32) error {
 	for k, v := range svc.Spec.Selector {
 		labelStrings = append(labelStrings, fmt.Sprintf("%s=%s", k, v))
 	}
-	logCommand := fmt.Sprintf("kubectl -n %s logs -l %s -c %s -f", namespace, strings.Join(labelStrings, ","), proxyContainerName)
+	logCommand := fmt.Sprintf("kubectl -n %s logs -l %s -c %s -f", namespace, strings.Join(labelStrings, ","), containerName)
 
-	fmt.Printf("Added log proxy to pods of service %q as container %q\n", svc.Name, proxyContainerName)
+	fmt.Printf("Added log proxy to pods of service %q as container %q\n", svc.Name, containerName)
 	fmt.Printf("Get the request and response logs with %q\n", logCommand)
 
 	return nil
