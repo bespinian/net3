@@ -83,7 +83,7 @@ func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error updating service %q in namespace %q: %w", svc.Name, namespace, err)
 	}
 
-	fmt.Printf("Removed log proxy from pods of service %q\n", svc.Name)
+	fmt.Printf("Removing log proxy from pods of service %q\n", svc.Name)
 
 	return nil
 }

@@ -98,7 +98,7 @@ func (n *net3) AddProxy(namespace, serviceName, containerName, image string, por
 	}
 	logCommand := fmt.Sprintf("kubectl -n %s logs -l %s -c %s -f", namespace, strings.Join(labelStrings, ","), containerName)
 
-	fmt.Printf("Added log proxy to pods of service %q as container %q\n", svc.Name, containerName)
+	fmt.Printf("Adding log proxy to pods of service %q as container %q\n", svc.Name, containerName)
 	fmt.Printf("Get the request and response logs with %q\n", logCommand)
 
 	return nil
