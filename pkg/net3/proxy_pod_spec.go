@@ -37,7 +37,7 @@ func podSpecWithProxy(podSpec v1.PodSpec, containerName, image string, proxyPort
 	return podSpec
 }
 
-func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string, targetPort int32) (v1.PodSpec, int32, error) {
+func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string) (v1.PodSpec, int32, error) {
 	var originalPort int32
 	containers := make([]v1.Container, 0)
 

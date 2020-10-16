@@ -66,7 +66,7 @@ func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error getting container name from service annotation %q: %w", annotationName, ErrNotFound)
 	}
 
-	podSpec, originalPort, err := podSpecWithoutProxy(deployment.Spec.Template.Spec, containerName, port)
+	podSpec, originalPort, err := podSpecWithoutProxy(deployment.Spec.Template.Spec, containerName)
 	if err != nil {
 		return fmt.Errorf("error removing proxy container from pods of deployment %q: %w", deployment.Name, err)
 	}
