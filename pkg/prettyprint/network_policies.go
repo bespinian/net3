@@ -19,13 +19,15 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAl
 
 		if policyType == v1.PolicyTypeIngress {
 			for _, r := range p.Spec.Ingress {
-				lines = append(lines, fmt.Sprintf("Rule:       %s", fmtIngressRule(r, p.Namespace)))
+				ruleLines := fmtIngressRule(r, p.Namespace)
+				lines = append(lines, ruleLines...)
 			}
 		}
 
 		if policyType == v1.PolicyTypeEgress {
 			for _, r := range p.Spec.Egress {
-				lines = append(lines, fmt.Sprintf("Rule:       %s", fmtEgressRule(r, p.Namespace)))
+				ruleLines := fmtEgressRule(r, p.Namespace)
+				lines = append(lines, ruleLines...)
 			}
 		}
 
@@ -33,8 +35,9 @@ func NetworkPolicies(policyType v1.PolicyType, policies []v1.NetworkPolicy, isAl
 	}
 }
 
-func fmtIngressRule(rule v1.NetworkPolicyIngressRule, namespace string) string {
-	str := "Allow "
+func fmtIngressRule(rule v1.NetworkPolicyIngressRule, namespace string) []string {
+	result := make([]string, 0)
+	str := "Rule:       Allow "
 
 	portStrings := make([]string, 0, len(rule.Ports))
 	for _, p := range rule.Ports {
@@ -49,13 +52,22 @@ func fmtIngressRule(rule v1.NetworkPolicyIngressRule, namespace string) string {
 	for _, f := range rule.From {
 		fromStrings = append(fromStrings, fmtPeer(f, namespace))
 	}
-	str += fmt.Sprintf(" from %s", strings.Join(fromStrings, " or from "))
+	str += fmt.Sprintf(" from %s", fromStrings[0])
+	result = append(result, str)
 
-	return str
+	for i, s := range fromStrings {
+		if i == 0 {
+			continue
+		}
+		result = append(result, fmt.Sprintf("            or from %s", s))
+	}
+
+	return result
 }
 
-func fmtEgressRule(rule v1.NetworkPolicyEgressRule, namespace string) string {
-	str := "Allow "
+func fmtEgressRule(rule v1.NetworkPolicyEgressRule, namespace string) []string {
+	result := make([]string, 0)
+	str := "Rule:       Allow "
 
 	portStrings := make([]string, 0, len(rule.Ports))
 	for _, p := range rule.Ports {
@@ -70,9 +82,17 @@ func fmtEgressRule(rule v1.NetworkPolicyEgressRule, namespace string) string {
 	for _, f := range rule.To {
 		toStrings = append(toStrings, fmtPeer(f, namespace))
 	}
-	str += fmt.Sprintf(" to %s", strings.Join(toStrings, " or to "))
+	str += fmt.Sprintf(" to %s", toStrings[0])
+	result = append(result, str)
 
-	return str
+	for i, s := range toStrings {
+		if i == 0 {
+			continue
+		}
+		result = append(result, fmt.Sprintf("            or to %s", s))
+	}
+
+	return result
 }
 
 func fmtPort(port v1.NetworkPolicyPort) string {
