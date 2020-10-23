@@ -96,7 +96,7 @@ func main() {
 							&cli.StringFlag{
 								Name:    "image",
 								Aliases: []string{"i"},
-								Value:   "bespinian/net3-http-proxy",
+								Value:   "bespinian/net3-proxy",
 								Usage:   "image for proxy container",
 							},
 						},

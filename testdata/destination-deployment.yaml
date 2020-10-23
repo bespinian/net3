@@ -16,4 +16,5 @@ spec:
         - name: nginx
           image: nginxinc/nginx-unprivileged:alpine
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080

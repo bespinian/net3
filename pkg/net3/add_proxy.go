@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // Logs redeploys pods with a proxy container which logs all requests to the specified port.
@@ -15,24 +16,6 @@ func (n *net3) AddProxy(namespace, serviceName, containerName, image string, por
 	if err != nil {
 		return fmt.Errorf("service with name %q not found in namespace %q: %w", serviceName, namespace, ErrNotFound)
 	}
-
-	// look up destination port and highest destination port
-	var destPort, maxDestPort int32
-	for _, p := range svc.Spec.Ports {
-		if p.Port == port {
-			destPort = p.TargetPort.IntVal
-		}
-		if p.TargetPort.IntVal > maxDestPort {
-			maxDestPort = p.TargetPort.IntVal
-		}
-	}
-
-	if destPort == 0 {
-		return fmt.Errorf("service %q does not expose port %v: %w", serviceName, port, ErrNotFound)
-	}
-
-	// choose a port for the proxy higher than any current destination port
-	proxyPort := maxDestPort + 1
 
 	svcPods, err := n.getServicePods(context.Background(), namespace, serviceName)
 	if err != nil {
@@ -79,17 +62,42 @@ func (n *net3) AddProxy(namespace, serviceName, containerName, image string, por
 		return fmt.Errorf("error getting deployment %q: %w", replicaSetOwnerRef.Name, err)
 	}
 
-	deployment.Spec.Template.Spec = podSpecWithProxy(deployment.Spec.Template.Spec, containerName, image, proxyPort, destPort)
-	_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("error updating deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
+	// look up target port and highest target port
+	var (
+		originalTargetPort        intstr.IntOrString
+		targetPort, maxTargetPort int32
+		ok                        bool
+	)
+	for _, p := range svc.Spec.Ports {
+		if p.Port == port {
+			fmt.Printf("%+v\n", p.TargetPort)
+			originalTargetPort = p.TargetPort
+			targetPort, ok = getExposedPodPort(&samplePod, p.TargetPort)
+		}
+		if targetPort > maxTargetPort {
+			maxTargetPort = targetPort
+		}
 	}
 
+	if !ok {
+		return fmt.Errorf("service %q does not expose port %v: %w", serviceName, port, ErrNotFound)
+	}
+
+	// choose a port for the proxy higher than any current target port
+	proxyPort := maxTargetPort + 1
+
 	// update the service to forward to the proxy port
-	*svc = svcWithProxy(*svc, containerName, port, proxyPort)
+	*svc = svcWithProxy(*svc, containerName, port, originalTargetPort, intstr.FromInt(int(proxyPort)))
 	_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("error updating service %q in namespace %q with proxy port: %w", svc.Name, namespace, err)
+	}
+
+	// update deployment pod spec
+	deployment.Spec.Template.Spec = podSpecWithProxy(deployment.Spec.Template.Spec, containerName, image, proxyPort, targetPort)
+	_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("error updating deployment %q in namespace %q with proxy container: %w", deployment.Name, namespace, err)
 	}
 
 	labelStrings := make([]string, 0, len(svc.Spec.Selector))

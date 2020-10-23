@@ -56,23 +56,24 @@ $ net3 topo -n source mypod123 myservice123
 
 ```
 
-### Log
+### Proxy
 
-Add HTTP request and response logging to an existing service
+Add a logging proxy to an existing service. Currently, only the HTTP protocol is supported.
 
-Run
+To add a proxy, run
 
 ```shell
-$ net3 log -n destination myservice123 80
-
+$ net3 proxy add -n mynamespace123 myservice123 80
 ```
 
 and in another shell run
 
 ```shell
-$ kubectl logs -n destination mypod123 -c net3-http-proxy -f
+$ kubectl logs -n mynamespace123 mypod123 -c net3-proxy -f
 ```
 
-## Roadmap
+When you're done, remove the logging proxy from a service by running
 
-- [ ] Istio support for `topo` command
+```shell
+$ net3 proxy remove -n mynamespace123 myservice123 80
+```

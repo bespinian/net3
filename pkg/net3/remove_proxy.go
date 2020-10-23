@@ -60,13 +60,21 @@ func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
 		return fmt.Errorf("error getting deployment %q: %w", replicaSetOwnerRef.Name, err)
 	}
 
-	annotationName := fmt.Sprintf("%s-%v", svcAnnotationNamePrefix, port)
+	annotationName := fmt.Sprintf("%s-%v", svcContainerNameAnnotationPrefix, port)
 	containerName, ok := svc.Annotations[annotationName]
 	if !ok {
 		return fmt.Errorf("error getting container name from service annotation %q: %w", annotationName, ErrNotFound)
 	}
 
-	podSpec, originalPort, err := podSpecWithoutProxy(deployment.Spec.Template.Spec, containerName)
+	// update the service to forward to the original target port
+	*svc = svcWithoutProxy(*svc, port)
+	_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("error updating service %q in namespace %q: %w", svc.Name, namespace, err)
+	}
+
+	// update deployment pod spec
+	podSpec, err := podSpecWithoutProxy(deployment.Spec.Template.Spec, containerName)
 	if err != nil {
 		return fmt.Errorf("error removing proxy container from pods of deployment %q: %w", deployment.Name, err)
 	}
@@ -74,13 +82,6 @@ func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
 	_, err = n.k8s.AppsV1().Deployments(namespace).Update(context.Background(), deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("error updating deployment %q in namespace %q: %w", deployment.Name, namespace, err)
-	}
-
-	// update the service to forward to the proxy port
-	*svc = svcWithoutProxy(*svc, port, originalPort)
-	_, err = n.k8s.CoreV1().Services(namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("error updating service %q in namespace %q: %w", svc.Name, namespace, err)
 	}
 
 	fmt.Printf("Removing log proxy from pods of service %q\n", svc.Name)
