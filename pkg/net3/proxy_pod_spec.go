@@ -37,8 +37,8 @@ func podSpecWithProxy(podSpec v1.PodSpec, containerName, image string, proxyPort
 	return podSpec
 }
 
-func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string) (v1.PodSpec, int32, error) {
-	var originalPort int32
+func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string) (v1.PodSpec, error) {
+	var originalPort int
 	containers := make([]v1.Container, 0)
 
 	for _, c := range podSpec.Containers {
@@ -48,9 +48,9 @@ func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string) (v1.PodSpec, 
 					v, err := strconv.Atoi(e.Value)
 					if err != nil {
 						err = fmt.Errorf("error converting target port to int: %w", err)
-						return v1.PodSpec{}, 0, err
+						return v1.PodSpec{}, err
 					}
-					originalPort = int32(v)
+					originalPort = v
 				}
 			}
 		} else {
@@ -59,14 +59,14 @@ func podSpecWithoutProxy(podSpec v1.PodSpec, containerName string) (v1.PodSpec, 
 	}
 	if len(containers) == len(podSpec.Containers) {
 		err := fmt.Errorf("could not find proxy container in pod spec: %w", ErrNotFound)
-		return v1.PodSpec{}, 0, err
+		return v1.PodSpec{}, err
 	}
 	if originalPort == 0 {
 		err := fmt.Errorf("could not find environment variable %s in proxy container spec: %w", proxyEnvVarTargetPort, ErrNotFound)
-		return v1.PodSpec{}, 0, err
+		return v1.PodSpec{}, err
 	}
 
 	podSpec.Containers = containers
 
-	return podSpec, originalPort, nil
+	return podSpec, nil
 }
