@@ -1,5 +1,8 @@
 # net³
 
+[![Lint and Test](https://github.com/bespinian/net3/workflows/Lint%20and%20Test/badge.svg)](https://github.com/bespinian/net3/actions)
+[![Go Report Card](https://goreportcard.com/badge/bespinian/net3 "Go Report Card")](https://goreportcard.com/report/bespinian/net3)
+
 net³ [netkube] is a tool to debug and understand network traffic in Kubernetes.
 
 ## Usage
