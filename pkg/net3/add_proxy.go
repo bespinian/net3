@@ -9,7 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// Logs redeploys pods with a proxy container which logs all requests to the specified port.
+// AddProxy redeploys pods with a proxy container which logs all requests to the specified port.
 func (n *net3) AddProxy(namespace, serviceName, containerName, image string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})

@@ -3,6 +3,7 @@ linters:
   disable:
     - dupl
     - exhaustivestruct
+    - forbidigo
     - funlen
     - gocognit
     - gocyclo

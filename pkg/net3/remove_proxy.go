@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Logs redeploys pods with a proxy container which logs all requests to the specified port.
+// RemoveProxy removes an existing net3 proxy from a service.
 func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
