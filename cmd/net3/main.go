@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	topoArgsCount     = 2
-	proxyAddArgsCount = 2
+	topoArgsCount      = 2
+	proxyAddArgsCount  = 2
+	proxyListArgsCount = 0
 )
 
 func main() {
@@ -76,6 +77,43 @@ func main() {
 				Aliases: []string{"p"},
 				Usage:   "manage logging proxies",
 				Subcommands: []*cli.Command{
+					{
+						Name:    "list",
+						Aliases: []string{"l"},
+						Usage:   "list logging proxies",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "namespace",
+								Aliases: []string{"n"},
+								Value:   "default",
+								Usage:   "the target namespace",
+							},
+							&cli.BoolFlag{
+								Name:    "all-namespaces",
+								Aliases: []string{"i"},
+								Value:   false,
+								Usage:   "if enabled, all namespaces are considered",
+							},
+							&cli.StringFlag{
+								Name:    "service",
+								Aliases: []string{"s"},
+								Usage:   "name of service (defaults to all)",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							args := c.Args()
+
+							if args.Len() != proxyListArgsCount {
+								return errors.New("usage: net3 proxy list") //nolint:goerr113
+							}
+							err = n3.ListProxies(c.String("namespace"), c.Bool("all-namespaces"), c.String("service"))
+							if err != nil {
+								return fmt.Errorf("error listing proxies: %w", err)
+							}
+
+							return nil
+						},
+					},
 					{
 						Name:    "add",
 						Aliases: []string{"a"},

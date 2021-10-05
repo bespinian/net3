@@ -6,6 +6,7 @@ import "k8s.io/client-go/kubernetes"
 type Net3 interface {
 	Topo(namespace, src, dest string) error
 	AddProxy(namespace, serviceName, containerName, image string, port int32) error
+	ListProxies(namespace string, allNamespaces bool, serviceName string) error
 	RemoveProxy(namespace, serviceName string, port int32) error
 }
 
