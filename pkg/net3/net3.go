@@ -2,21 +2,13 @@ package net3
 
 import "k8s.io/client-go/kubernetes"
 
-// Net3 represents a net3 application.
-type Net3 interface {
-	Topo(namespace, src, dest string) error
-	AddProxy(namespace, serviceName, containerName, image string, port int32) error
-	ListProxies(namespace string, allNamespaces bool, serviceName string) error
-	RemoveProxy(namespace, serviceName string, port int32) error
-}
-
-type net3 struct {
+type Net3 struct {
 	k8s kubernetes.Interface
 }
 
 // New creates a net3 application.
-func New(k8s kubernetes.Interface) Net3 {
-	c := &net3{
+func New(k8s kubernetes.Interface) *Net3 {
+	c := &Net3{
 		k8s: k8s,
 	}
 	return c

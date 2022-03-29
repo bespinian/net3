@@ -10,7 +10,7 @@ import (
 )
 
 // Topo lists the topology of a connection path.
-func (n *net3) Topo(namespace, src, dest string) error {
+func (n *Net3) Topo(namespace, src, dest string) error {
 	// Source
 	srcPod, err := n.k8s.CoreV1().Pods(namespace).Get(context.Background(), src, metav1.GetOptions{})
 	if err != nil {
