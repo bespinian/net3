@@ -8,8 +8,13 @@ linters:
     - funlen
     - gocognit
     - gocyclo
+    - golint
+    - interfacer
     - lll
+    - maligned
     - nlreturn
+    - scopelint
+    - varnamelen
     - wsl
 
 linters-settings:

@@ -8,7 +8,7 @@ import (
 )
 
 // RemoveProxy removes an existing net3 proxy from a service.
-func (n *net3) RemoveProxy(namespace, serviceName string, port int32) error {
+func (n *Net3) RemoveProxy(namespace, serviceName string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {

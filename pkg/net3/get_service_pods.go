@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (n *net3) getServicePods(ctx context.Context, namespace, svcName string) ([]corev1.Pod, error) {
+func (n *Net3) getServicePods(ctx context.Context, namespace, svcName string) ([]corev1.Pod, error) {
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(ctx, svcName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting service %q in namespace %q: %w", svcName, namespace, err)

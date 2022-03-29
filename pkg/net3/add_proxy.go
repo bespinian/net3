@@ -10,7 +10,7 @@ import (
 )
 
 // AddProxy redeploys pods with a proxy container which logs all requests to the specified port.
-func (n *net3) AddProxy(namespace, serviceName, containerName, image string, port int32) error {
+func (n *Net3) AddProxy(namespace, serviceName, containerName, image string, port int32) error {
 	// retrieve destination service
 	svc, err := n.k8s.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {
