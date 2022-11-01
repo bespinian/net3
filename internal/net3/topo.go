@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bespinian/net3/pkg/prettyprint"
+	"github.com/bespinian/net3/internal/prettyprint"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
